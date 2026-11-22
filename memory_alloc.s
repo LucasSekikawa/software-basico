@@ -1,5 +1,48 @@
+# indica que o codigo nao precisa de pilha executavel
+.section .note.GNU-stack,"",@progbits
+
+.section .data
+.globl original_brk
+.globl heap_end
+
+# endereco onde a heap comeca
+original_brk:
+    .quad 0
+
+# endereco onde a heap termina atualmente
+heap_end:
+    .quad 0
+
 .text
 .globl memory_alloc
+
+.globl setup_brk
+.globl dismiss_brk
+
+setup_brk:
+
+    # prepara a syscall brk com argumento 0 para consultar o brk atual
+    movq $12, %rax
+    movq $0, %rdi
+    syscall
+
+    # inicio e fim iguais indicam que a heap esta vazia
+    movq %rax, original_brk(%rip)
+    movq %rax, heap_end(%rip)
+    ret
+
+
+dismiss_brk:
+
+    # prepara a syscall brk para devolver toda a heap ao sistema
+    movq $12, %rax
+    movq original_brk(%rip), %rdi
+    syscall
+
+    # atualiza o limite para que nenhum bloco antigo seja percorrido
+    movq original_brk(%rip), %rax
+    movq %rax, heap_end(%rip)
+    ret
 
 memory_alloc:
 
@@ -21,7 +64,7 @@ inicio:
     movq $0, %r8
 
     # r9 guarda o endereco do bloco atual, comecando pelo inicio da heap
-    movq heap_start(%rip), %r9
+    movq original_brk(%rip), %r9
 
 
 ini_loop_busca_blocos:
