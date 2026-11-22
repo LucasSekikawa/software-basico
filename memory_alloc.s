@@ -1,6 +1,3 @@
-# indica que o codigo nao precisa de pilha executavel
-.section .note.GNU-stack,"",@progbits
-
 .section .data
 .globl original_brk
 .globl heap_end
