@@ -67,5 +67,74 @@ int main() {
 	if (!alloc_return) printf("\tO RETORNO DA LIBERAÇÃO FOI NULL!\n");
 	else printf("\tO RETORNO DA LIBERAÇÃO NÃO FOI NULL!\n");
 
+	printf("\n============================== TESTES ADICIONAIS ==============================\n");
+
+	printf("==>> DESALOCANDO UM PONTEIRO NULO (ILEGAL):\n");
+	if (memory_free(NULL) == 0) printf("\tRETORNO: CORRETO!\n");
+	else printf("\tRETORNO: INCORRETO!\n");
+
+	printf("==>> ALOCANDO 50 BYTES WORST FIT COM VÁRIOS BLOCOS LIVRES:\n");
+	void *p = memory_alloc(50, 0);
+	if (p == t_pnt) printf("\tLOCAL: CORRETO!\n");
+	else printf("\tLOCAL: INCORRETO!\n");
+	if (p == NULL) return 1;
+
+	printf("==>> DESALOCANDO O MEIO DO BLOCO (ILEGAL):\n");
+	if (memory_free(p + 25) == 0) printf("\tRETORNO: CORRETO!\n");
+	else printf("\tRETORNO: INCORRETO!\n");
+	if (*((char*) (p-9)) == 1) printf("\tIND. DE USO: CORRETO!\n");
+	else printf("\tIND. DE USO: INCORRETO!\n");
+
+	printf("==>> DESALOCANDO O CABEÇALHO DO BLOCO (ILEGAL):\n");
+	if (memory_free(p-9) == 0) printf("\tRETORNO: CORRETO!\n");
+	else printf("\tRETORNO: INCORRETO!\n");
+
+	printf("==>> DESALOCANDO O MESMO BLOCO DUAS VEZES:\n");
+	if (memory_free(p) == 1) printf("\tPRIMEIRA DESALOCAÇÃO: CORRETO!\n");
+	else printf("\tPRIMEIRA DESALOCAÇÃO: INCORRETO!\n");
+	if (memory_free(p) == 0) printf("\tSEGUNDA DESALOCAÇÃO: CORRETO!\n");
+	else printf("\tSEGUNDA DESALOCAÇÃO: INCORRETO!\n");
+
+	printf("==>> ALOCANDO ZERO BYTES:\n");
+	if (memory_alloc(0, 0) == NULL) printf("\tRETORNO: CORRETO!\n");
+	else printf("\tRETORNO: INCORRETO!\n");
+
+	printf("==>> ALOCANDO COM ESTRATÉGIA INVÁLIDA:\n");
+	if (memory_alloc(20, 2) == NULL) printf("\tRETORNO: CORRETO!\n");
+	else printf("\tRETORNO: INCORRETO!\n");
+
+	printf("==>> ALOCANDO UM BLOCO DE TAMANHO EXATO BEST FIT:\n");
+	p = memory_alloc(41, 1);
+	if (p == fo_pnt) printf("\tLOCAL: CORRETO!\n");
+	else printf("\tLOCAL: INCORRETO!\n");
+	if (p == NULL) return 1;
+	if (*((long long*) (p-8)) == 41) printf("\tTAMANHO: CORRETO!\n");
+	else printf("\tTAMANHO: INCORRETO!\n");
+
+	printf("==>> DIVIDINDO UM BLOCO COM SOBRA DE 10 BYTES:\n");
+	void *q = memory_alloc(40, 0);
+	if (q == NULL) return 1;
+	if (*((long long*) (q-8)) == 40 && *((char*) (q+40)) == 0 && *((long long*) (q+41)) == 1)
+		printf("\tFRAGMENTAÇÃO: CORRETO!\n");
+	else printf("\tFRAGMENTAÇÃO: INCORRETO!\n");
+
+	printf("==>> ALOCANDO UM BLOCO MAIOR QUE OS BLOCOS LIVRES:\n");
+	void *r = memory_alloc(200, 0);
+	if (r == NULL) return 1;
+	if (r == t_pnt+109) printf("\tLOCAL: CORRETO!\n");
+	else printf("\tLOCAL: INCORRETO!\n");
+	*((char*) p) = 'A';
+	*((char*) q) = 'B';
+	*((char*) r) = 'C';
+	memory_free(q);
+	if (*((char*) p) == 'A' && *((char*) r) == 'C') printf("\tDADOS PRESERVADOS: CORRETO!\n");
+	else printf("\tDADOS PRESERVADOS: INCORRETO!\n");
+
+	printf("==>> RESTAURANDO A HEAP:\n");
+	dismiss_brk();
+	setup_brk();
+	if (original_brk == initial_brk) printf("\tENDEREÇO INICIAL: CORRETO!\n");
+	else printf("\tENDEREÇO INICIAL: INCORRETO!\n");
+
 	return 0;
 }
