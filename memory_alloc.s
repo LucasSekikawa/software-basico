@@ -16,6 +16,8 @@ heap_end:
 .globl setup_brk
 .globl dismiss_brk
 
+.globl memory_free
+
 setup_brk:
 
     # prepara a syscall brk com argumento 0 para consultar o brk atual
@@ -224,3 +226,41 @@ erro_alocacao:
     # retorna NULL em caso de parametros invalidos, overflow ou falha na alocacao
     movq $0, %rax
     ret
+
+memory_free:
+    movq original_brk(%rip), %r8
+    addq $9, %r8
+    cmpq %r8, %rdi
+    jb erro_desalocacao
+    cmpq heap_end(%rip), %rdi
+    jae erro_desalocacao
+    movq original_brk(%rip), %r9
+
+loop_busca_desalocacao:
+    cmpq heap_end(%rip), %r9
+    jae erro_desalocacao
+    movq %r9, %r8
+    addq $9, %r8
+    cmpq %r8, %rdi
+    je libera_bloco
+    jmp pula_bloco_desaloca
+
+pula_bloco_desaloca:
+    movq 1(%r9), %r10
+    addq %r10, %r8
+    movq %r8, %r9
+    jmp loop_busca_desalocacao
+
+libera_bloco:
+    cmpb $1, (%r9)
+    jne erro_desalocacao
+    movb $0, (%r9)
+    movq $1, %rax
+    ret
+
+erro_desalocacao:
+    movq $0, %rax
+    ret
+
+
+
