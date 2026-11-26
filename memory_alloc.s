@@ -18,6 +18,8 @@ heap_end:
 
 .globl memory_free
 
+# ----------------------- BRK -----------------------
+
 setup_brk:
 
     # prepara a syscall brk com argumento 0 para consultar o brk atual
@@ -42,6 +44,8 @@ dismiss_brk:
     movq original_brk(%rip), %rax
     movq %rax, heap_end(%rip)
     ret
+
+# ----------------------- Alocação -----------------------
 
 memory_alloc:
 
@@ -226,6 +230,8 @@ erro_alocacao:
     # retorna NULL em caso de parametros invalidos, overflow ou falha na alocacao
     movq $0, %rax
     ret
+
+# ----------------------- Desalocação -----------------------
 
 memory_free:
     movq original_brk(%rip), %r8
