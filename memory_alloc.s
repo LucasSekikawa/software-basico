@@ -236,31 +236,31 @@ erro_alocacao:
 memory_free:
     movq original_brk(%rip), %r8
     addq $9, %r8
-    cmpq %r8, %rdi
+    cmpq %r8, %rdi # Verifica se rdi é menor do que o limite inferior
     jb erro_desalocacao
-    cmpq heap_end(%rip), %rdi
+    cmpq heap_end(%rip), %rdi # Verifica se rdi é maior do que o limite superior
     jae erro_desalocacao
-    movq original_brk(%rip), %r9
+    movq original_brk(%rip), %r9 # Começa o loop no começo da heap
 
 loop_busca_desalocacao:
     cmpq heap_end(%rip), %r9
-    jae erro_desalocacao
+    jae erro_desalocacao # Ultrapassou o limite superior
     movq %r9, %r8
     addq $9, %r8
     cmpq %r8, %rdi
-    je libera_bloco
-    jmp pula_bloco_desaloca
+    je libera_bloco # Achou o bloco
+    jmp pula_bloco_desaloca # Ainda não achou
 
 pula_bloco_desaloca:
-    movq 1(%r9), %r10
-    addq %r10, %r8
+    movq 1(%r9), %r10 # Verifica o tamnho dos dados, baseando-se no cabeçalho
+    addq %r10, %r8 # Pula para o próximo bloco
     movq %r8, %r9
     jmp loop_busca_desalocacao
 
 libera_bloco:
     cmpb $1, (%r9)
-    jne erro_desalocacao
-    movb $0, (%r9)
+    jne erro_desalocacao # Caso o bloco não estivesse ocupado, dá erro
+    movb $0, (%r9) # Desocupa o bloco
     movq $1, %rax
     ret
 
